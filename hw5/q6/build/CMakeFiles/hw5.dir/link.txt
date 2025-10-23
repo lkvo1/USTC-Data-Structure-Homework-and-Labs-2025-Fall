@@ -1,0 +1,1 @@
+/usr/bin/c++ CMakeFiles/hw5.dir/home/lkvo/Data_Structrue/DataStructrueHomework_USTC/hw5/q6/q6.cpp.o -o hw5 
