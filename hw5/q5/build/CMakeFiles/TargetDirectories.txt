@@ -1,3 +1,0 @@
-/home/lkvo/Data Structrue/DataStructrueHomework_USTC/hw5/q5/build/CMakeFiles/hw5.dir
-/home/lkvo/Data Structrue/DataStructrueHomework_USTC/hw5/q5/build/CMakeFiles/edit_cache.dir
-/home/lkvo/Data Structrue/DataStructrueHomework_USTC/hw5/q5/build/CMakeFiles/rebuild_cache.dir
