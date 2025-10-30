@@ -9,3 +9,15 @@
 代码仅供参考
 
 PS:欢迎加入粉丝群:484030731(QQ)
+
+# University of Science and Technology of China Autumn Semester 2025 Data Structure A Homework & Experiment
+
+This is the homework and experiment repository for Teacher Majianhui's Data Structure class in the Autumn Semester 2025 at University of Science and Technology of China.
+
+There are corresponding codes in each hw and lab folder. All the problems are from "Data Structure Problem Set C Language Edition" by Yan Weimin.
+
+Here, hw is the exercise part in the front of the book, and lab is the internship part in the back.
+
+The codes are for reference only.
+
+PS: Welcome to join the fan group: 484030731 (QQ)"
