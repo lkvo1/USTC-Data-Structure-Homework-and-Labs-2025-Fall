@@ -49,5 +49,6 @@
         "numeric": "cpp",
         "random": "cpp",
         "numbers": "cpp"
-    }
+    },
+    "cmake.ignoreCMakeListsMissing": true
 }
