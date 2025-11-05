@@ -13,7 +13,7 @@ int main() {
     }, 4);
 
     assignMatrix(matB, new int*[3] {
-        new int[5]{0, 2, 0, 0, 0},
+        new int[5]{0, 2, -3, 0, 0},
         new int[5]{0, 0, 0, 3, 0},
         new int[5]{0, 1, 4, 0, 5}
     }, 6);
@@ -26,16 +26,23 @@ int main() {
         new int[7]{0, 0, 0, 0, 0, 0, 6}
     }, 1);
 
-    int** resultAdd = matA + matB;
-    int** resultSub = matA - matB;
+    printf("Matrix A:\n");
+    printMatrix(matA, matA.rows, matA.cols);
+    printf("Matrix B:\n");
+    printMatrix(matB, matB.rows, matB.cols);
+    printf("Matrix C:\n");
+    printMatrix(matC, matC.rows, matC.cols);
 
-    int** resultError0 = matA + matC;
-    int** resultError1 = matA - matC;
+    SparseMatrix resultAdd = matA + matB;
+    SparseMatrix resultSub = matA - matB;
+
+    SparseMatrix resultError0 = matA + matC;
+    SparseMatrix resultError1 = matA - matC;
 
     std::cout << "A + B =" << std::endl;
-    printMatrix(resultAdd, matA.rows, matA.cols);
+    printMatrix(resultAdd, matA.rows, matA.cols, true);
     std::cout << "A - B =" << std::endl;
-    printMatrix(resultSub, matA.rows, matA.cols);
+    printMatrix(resultSub, matA.rows, matA.cols, true);
 
     return 0;
 }

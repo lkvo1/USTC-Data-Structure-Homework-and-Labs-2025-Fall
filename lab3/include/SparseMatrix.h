@@ -26,8 +26,10 @@ typedef struct SparseMatrix {
 
 void initSparseMatrix(SparseMatrix &matrix, int rows, int cols);
 void assignMatrix(SparseMatrix &matrix, int** data, int numNonZero);
-int** operator+(const SparseMatrix &a, const SparseMatrix &b);
-int** operator-(const SparseMatrix &a, const SparseMatrix &b);
-void printMatrix(int** matrix, int rows, int cols);
-
+// int** operator+(const SparseMatrix &a, const SparseMatrix &b);
+// int** operator-(const SparseMatrix &a, const SparseMatrix &b);
+// void printMatrix(int** matrix, int rows, int cols);
+void printMatrix(SparseMatrix matrix, int rows, int cols, bool withoutZeros = false);
+SparseMatrix operator+(const SparseMatrix &a, const SparseMatrix &b);
+SparseMatrix operator-(const SparseMatrix &a, const SparseMatrix &b);
 #endif // SPARSE_MATRIX_H
