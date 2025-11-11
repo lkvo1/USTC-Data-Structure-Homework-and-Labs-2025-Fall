@@ -65,7 +65,7 @@ void HuffmanSystem::generateHuffmanCodes(std::stringstream& ss) {
             huffmanCodes << (bit ? '1' : '0');
         }
     }
-    std::cout << "Huffman Codes Stream generate complete." << std::endl;
+    // std::cout << "Huffman Codes Stream generate complete." << std::endl;
 }
 
 void HuffmanSystem::generateFrequencyTable(std::stringstream& ss) {
@@ -76,7 +76,7 @@ void HuffmanSystem::generateFrequencyTable(std::stringstream& ss) {
         frequencyTable[ch]++;
     }
     // while (ss.read((char*)(&ch), 1)) {}
-    std::cout << "Frequency table generate complete." << std::endl;
+    // std::cout << "Frequency table generate complete." << std::endl;
     
     // printFrequencyTable();
 }
@@ -121,7 +121,7 @@ void HuffmanSystem::buildHuffmanTree() {
     }
     // 最后剩下一个节点，即为Huffman Tree的根节点
     huffmanTreeRoot = hnodes[255];
-    std::cout << "Huffman Tree build complete." << std::endl;
+    // std::cout << "Huffman Tree build complete." << std::endl;
 }
 
 void HuffmanSystem::generateHuffmanCodesTable() {
@@ -130,7 +130,7 @@ void HuffmanSystem::generateHuffmanCodesTable() {
     std::vector<bool> code;
     dfs(huffmanTreeRoot, code);
     
-    std::cout << "Huffman Codes generate complete." << std::endl;
+    // std::cout << "Huffman Codes generate complete." << std::endl;
 }
 
 void HuffmanSystem::dfs(HNode* node, std::vector<bool>& code) {
@@ -157,6 +157,11 @@ void HuffmanSystem::encode(std::string& srcFilePath, std::string& dstFilePath) {
     std::ifstream inFile(srcFilePath, std::ios::binary);   // 以二进制方式打开文件
     if (!inFile) { std::cout << "Error: Unable to open source file." << std::endl; return; }
 
+    // 清空频率表
+    for (int i = 0; i < 256; i++) {
+        frequencyTable[i] = 0;
+    }
+
     std::stringstream ss;   
     ss << inFile.rdbuf();   // 存入inFile的内容到ss中
     generateFrequencyTable(ss); // 再将ss传入generateFrequencyTable中生成频率表
@@ -171,7 +176,7 @@ void HuffmanSystem::encode(std::string& srcFilePath, std::string& dstFilePath) {
 
     saveToFile(huffmanCodes, dstFilePath);   // 最后存到对应的目标文件*.huff中
 
-    std::cout << "Encoding completed." << std::endl;
+    std::cout << "Encode " << srcFilePath << " to " << dstFilePath << " completed." << std::endl;
 }
 
 void HuffmanSystem::decode(std::string& srcFilePath, std::string& dstFilePath) {
@@ -180,14 +185,28 @@ void HuffmanSystem::decode(std::string& srcFilePath, std::string& dstFilePath) {
         return;
     }
 
-    // .huff文件结构: 频率表 256 * sizeof(unsigned int) bytes + 比特流长度(N) sizeof(unsigned int) bits + 比特流内容 N bytes
-    std::cout << "Decoding file: " << dstFilePath << std::endl;
+    // .huff文件结构: 使用的字符数1字节 + 频率(每对5字节) + 比特流长度4字节 + 比特流内容
+    std::cout << "Decoding file: " << dstFilePath << "..." << std::endl;
     // 读取huff文件
     std::ifstream inFile(srcFilePath, std::ios::binary);
     if (!inFile) { std::cout << "Error: Unable to open source file." << std::endl; return; }
-    // 读取频率表
+    
+    // 清空频率表
     for (int i = 0; i < 256; i++) {
-        inFile.read(reinterpret_cast<char*>(&frequencyTable[i]), sizeof(unsigned int));
+        frequencyTable[i] = 0;
+    }
+    
+    // 读取使用的字符数量
+    unsigned char usedCharCount = 0;
+    inFile.read(reinterpret_cast<char*>(&usedCharCount), sizeof(unsigned char));
+    
+    // 读取每个字符和频率
+    for (int i = 0; i < usedCharCount; i++) {
+        unsigned char ch;
+        unsigned int freq;
+        inFile.read(reinterpret_cast<char*>(&ch), sizeof(unsigned char));
+        inFile.read(reinterpret_cast<char*>(&freq), sizeof(unsigned int));
+        frequencyTable[ch] = freq;
     }
 
     // 构建Huffman树和编码表
@@ -233,7 +252,7 @@ void HuffmanSystem::decode(std::string& srcFilePath, std::string& dstFilePath) {
         }
     }
     outFile.close();
-    std::cout << "Decoding completed." << std::endl;
+    std::cout << "Decode " << srcFilePath << " to " << dstFilePath << " completed." << std::endl;
 }
 
 void HuffmanSystem::saveToFile(std::stringstream& ss, std::string& filePath) {
@@ -242,16 +261,32 @@ void HuffmanSystem::saveToFile(std::stringstream& ss, std::string& filePath) {
         return;
     }
 
-    std::cout << "Saving to file: " << filePath << std::endl;
+    std::cout << "Saving to file: " << filePath << "..." << ' ';
     std::ofstream outFile(filePath, std::ios::binary);
     if (!outFile) {
         std::cout << "Error: Destination file " << filePath << " couldn't be opened." << std::endl;
         return;
     }
 
-    // 先写入频率表用于解码
+    // 稀疏频率表
+    // 统计使用的字符数量
+    unsigned char usedCharCount = 0;
     for (int i = 0; i < 256; i++) {
-        outFile.write(reinterpret_cast<char*>(&frequencyTable[i]), sizeof(unsigned int));
+        if (frequencyTable[i] > 0) {
+            usedCharCount++;
+        }
+    }
+    
+    // 写入使用字符数量
+    outFile.write(reinterpret_cast<char*>(&usedCharCount), sizeof(unsigned char));
+    
+    // 只写入实际使用的字符-频率对
+    for (int i = 0; i < 256; i++) {
+        if (frequencyTable[i] > 0) {
+            unsigned char ch = (unsigned char)i;
+            outFile.write(reinterpret_cast<char*>(&ch), sizeof(unsigned char));
+            outFile.write(reinterpret_cast<char*>(&frequencyTable[i]), sizeof(unsigned int));
+        }
     }
 
     // 获取比特流字符串
@@ -287,7 +322,7 @@ void HuffmanSystem::saveToFile(std::stringstream& ss, std::string& filePath) {
 
     outFile.close();
 
-    std::cout << "Save completed. Total bits: " << bitLength << std::endl;
+    std::cout << "Total bits: " << bitLength << std::endl;
 }
 
 HuffmanSystem::HuffmanSystem() {
@@ -323,7 +358,7 @@ void HuffmanSystem::handleUserInput(std::stringstream& ss) {
     } else if (command == "decode") {
         decode(srcFilePath, dstFilePath);
     } else if (command == "exit") {
-        std::cout << "Exiting Huffman Coding System." << std::endl;
+        // std::cout << "Exiting Huffman Coding System." << std::endl;
         exit(0);
     } else {
         std::cout << "Invalid command. Please try again." << std::endl;
@@ -342,6 +377,5 @@ void HuffmanSystem::run() {
         handleUserInput(ss);
     }
 }
-
 
 #endif // HUFFMAN_SYSTEM_H
