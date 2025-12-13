@@ -6,14 +6,8 @@ void initSparseMatrix(SparseMatrix &matrix, int rows, int cols) {
     matrix.rows = rows;
     matrix.cols = cols;
     matrix.numNonZero = 0;
-    matrix.rowHead = new OLNode*[rows];
-    matrix.colHead = new OLNode*[cols];
-    for (int i = 0; i < rows; i++) {
-        matrix.rowHead[i] = nullptr;
-    }
-    for (int j = 0; j < cols; j++) {
-        matrix.colHead[j] = nullptr;
-    }
+    matrix.rowHead = new OLNode(0, 0);
+    matrix.colHead = new OLNode(0, 0);
 }
 
 void addNodeAtRowEnd(OLNode *head, OLNode *newNode) {
@@ -34,31 +28,42 @@ void addNodeAtColEnd(OLNode *head, OLNode *newNode) {
 
 void assignMatrix(SparseMatrix &matrix, int** data, int numNonZero) {
     matrix.numNonZero = numNonZero;
+    // 如果找到新的非0元素，第一种情况是上一个元素在同一行，第二种情况是新的一行
+    OLNode* lastNonNullRowHead = nullptr;
+    OLNode* lastNonZeroNode = nullptr;
+    OLNode* currentRowHead = nullptr;
+    
     for (int i = 0; i < matrix.rows; i++) {
+        currentRowHead = nullptr;  // 每行开始时重置当前行头
+        
         for(int j = 0; j < matrix.cols; j++) {
             if (data[i][j] != 0) {
                 // 创建新节点
-                OLNode* newNode = new OLNode();
-                newNode->row = i;
-                newNode->col = j;
+                OLNode* newNode = new OLNode(i, j);
                 newNode->value = data[i][j];
                 newNode->right = nullptr;
                 newNode->down = nullptr;
-
-                // 插入行链表
-                if(matrix.rowHead[i] == nullptr) {
-                    matrix.rowHead[i] = newNode;
+                
+                // 如果是当前行的第一个非零元素
+                if (currentRowHead == nullptr) {
+                    currentRowHead = newNode;
+                    
+                    // 如果有上一个非全零行，将上一行的头结点的down指向当前行头
+                    if (lastNonNullRowHead != nullptr) {
+                        lastNonNullRowHead->down = newNode;
+                    } else {
+                        // 如果这是第一个非全零的行
+                        matrix.rowHead = newNode;
+                    }
+                    
+                    lastNonNullRowHead = newNode;  // 更新上一个非全零行的头结点
                 } else {
-                    addNodeAtRowEnd(matrix.rowHead[i], newNode);
+                    // 如果是同一行的后续元素
+                    lastNonZeroNode->right = newNode;
                 }
-
-                // 插入列链表
-                if(matrix.colHead[j] == nullptr) {
-                    matrix.colHead[j] = newNode;
-                } else {
-                    addNodeAtColEnd(matrix.colHead[j], newNode);
-                }
-            } 
+                
+                lastNonZeroNode = newNode;  // 更新最后一个非零节点
+            }
         }
     }
 }
@@ -67,127 +72,60 @@ SparseMatrix operator+(const SparseMatrix &a, const SparseMatrix &b) {
     SparseMatrix result;
     initSparseMatrix(result, a.rows, a.cols);
     if (a.cols != b.cols || a.rows != b.rows) {
-            std::cout << "Dimension not match." << std::endl;
-            return result;
+        std::cout << "Dimension not match." << std::endl;
+        return result;
     }
-    // 行遍历矩阵a和矩阵b的所有元素来构造行链表
-    OLNode* curA;
-    OLNode* curB;
-
+    
+    // 创建临时的二维数组来存储结果
+    int** tempResult = new int*[a.rows];
     for (int i = 0; i < a.rows; i++) {
-        curA = a.rowHead[i];
-        curB = b.rowHead[i];
-        while (curA != nullptr && curB != nullptr) {
-            if (curA->col == curB->col) {
-                OLNode* newNode = new OLNode();
-                newNode->row = curA->row;
-                newNode->col = curA->col;
-                newNode->value = curA->value + curB->value;
-
-                // 插入行链表
-                if (newNode->value != 0) {
-                    if (result.rowHead[i] == nullptr) {
-                        result.rowHead[i] = newNode;
-                    } else {
-                        addNodeAtRowEnd(result.rowHead[i], newNode);
-                    }
-                // 插入列链表
-                    if (result.colHead[newNode->col] == nullptr) {
-                        result.colHead[newNode->col] = newNode;
-                    } else {
-                        addNodeAtColEnd(result.colHead[newNode->col], newNode);
-                    }
-                } else {
-                    delete(newNode);
-                }
-
-                curA = curA->right;
-                curB = curB->right;
-            } else if (curA->col < curB->col) {
-                OLNode* newNode = new OLNode();
-                newNode->row = curA->row;
-                newNode->col = curA->col;
-                newNode->value = curA->value;
-                // 插入行链表
-                if (result.rowHead[newNode->row] == nullptr) {
-                    result.rowHead[newNode->row] = newNode;
-                } else {
-                    addNodeAtRowEnd(result.rowHead[newNode->row], newNode);
-                }
-                // 插入列链表
-                if (result.colHead[newNode->col] == nullptr) {
-                    result.colHead[newNode->col] = newNode;
-                } else {
-                    addNodeAtColEnd(result.colHead[newNode->col], newNode);
-                }
-                curA = curA->right;
-            } else if (curA->col > curB->col) {
-                OLNode* newNode = new OLNode();
-                newNode->row = curB->row;
-                newNode->col = curB->col;
-                newNode->value = curB->value;
-                // 插入行链表
-                if (result.rowHead[newNode->row] == nullptr) {
-                    result.rowHead[newNode->row] = newNode;
-                } else {
-                    addNodeAtRowEnd(result.rowHead[newNode->row], newNode);
-                }
-                // 插入列链表
-                if (result.colHead[newNode->col] == nullptr) {
-                    result.colHead[newNode->col] = newNode;
-                } else {
-                    addNodeAtColEnd(result.colHead[newNode->col], newNode);
-                }
-                curB = curB->right;
-            }
+        tempResult[i] = new int[a.cols];
+        for (int j = 0; j < a.cols; j++) {
+            tempResult[i][j] = 0;
         }
-
-        // 如果还有剩余节点，再进行处理
-        if (curA != nullptr) {
-            while (curA != nullptr) {
-                OLNode* newNode = new OLNode();
-                newNode->row = curA->row;
-                newNode->col = curA->col;
-                newNode->value = curA->value;
-                // 插入行链表
-                if (result.rowHead[newNode->row] == nullptr) {
-                    result.rowHead[newNode->row] = newNode;
-                } else {
-                    addNodeAtRowEnd(result.rowHead[newNode->row], newNode);
-                }
-                // 插入列链表
-                if (result.colHead[newNode->col] == nullptr) {
-                    result.colHead[newNode->col] = newNode;
-                } else {
-                    addNodeAtColEnd(result.colHead[newNode->col], newNode);
-                }
-                curA = curA->right;
-            }
+    }
+    
+    // 遍历矩阵a，将非零元素加入结果
+    OLNode* rowNodeA = a.rowHead;
+    while (rowNodeA != nullptr) {
+        OLNode* colNode = rowNodeA;
+        while (colNode != nullptr) {
+            tempResult[colNode->row][colNode->col] += colNode->value;
+            colNode = colNode->right;
         }
-
-        if (curB != nullptr) {
-            while (curB != nullptr) {
-                OLNode* newNode = new OLNode();
-                newNode->row = curB->row;
-                newNode->col = curB->col;
-                newNode->value = curB->value;
-                // 插入行链表
-                if (result.rowHead[newNode->row] == nullptr) {
-                    result.rowHead[newNode->row] = newNode;
-                } else {
-                    addNodeAtRowEnd(result.rowHead[newNode->row], newNode);
-                }
-                // 插入列链表
-                if (result.colHead[newNode->col] == nullptr) {
-                    result.colHead[newNode->col] = newNode;
-                } else {
-                    addNodeAtColEnd(result.colHead[newNode->col], newNode);
-                }
-                curB = curB->right;
+        rowNodeA = rowNodeA->down;
+    }
+    
+    // 遍历矩阵b，将非零元素加入结果
+    OLNode* rowNodeB = b.rowHead;
+    while (rowNodeB != nullptr) {
+        OLNode* colNode = rowNodeB;
+        while (colNode != nullptr) {
+            tempResult[colNode->row][colNode->col] += colNode->value;
+            colNode = colNode->right;
+        }
+        rowNodeB = rowNodeB->down;
+    }
+    
+    // 计算非零元素个数
+    int numNonZero = 0;
+    for (int i = 0; i < a.rows; i++) {
+        for (int j = 0; j < a.cols; j++) {
+            if (tempResult[i][j] != 0) {
+                numNonZero++;
             }
         }
     }
-
+    
+    // 使用assignMatrix函数构建结果稀疏矩阵
+    assignMatrix(result, tempResult, numNonZero);
+    
+    // 释放临时数组
+    for (int i = 0; i < a.rows; i++) {
+        delete[] tempResult[i];
+    }
+    delete[] tempResult;
+    
     return result;
 }
 
@@ -195,138 +133,89 @@ SparseMatrix operator-(const SparseMatrix &a, const SparseMatrix &b) {
     SparseMatrix result;
     initSparseMatrix(result, a.rows, a.cols);
     if (a.cols != b.cols || a.rows != b.rows) {
-            std::cout << "Dimension not match." << std::endl;
-            return result;
+        std::cout << "Dimension not match." << std::endl;
+        return result;
     }
-    // 行遍历矩阵a和矩阵b的所有元素来构造行链表
-    OLNode* curA;
-    OLNode* curB;
-
+    
+    // 创建临时的二维数组来存储结果
+    int** tempResult = new int*[a.rows];
     for (int i = 0; i < a.rows; i++) {
-        curA = a.rowHead[i];
-        curB = b.rowHead[i];
-        while (curA != nullptr && curB != nullptr) {
-            if (curA->col == curB->col) {
-                OLNode* newNode = new OLNode();
-                newNode->row = curA->row;
-                newNode->col = curA->col;
-                newNode->value = curA->value - curB->value;
-
-                // 插入行链表
-                if (newNode->value != 0) {
-                    if (result.rowHead[i] == nullptr) {
-                        result.rowHead[i] = newNode;
-                    } else {
-                        addNodeAtRowEnd(result.rowHead[i], newNode);
-                    }
-                // 插入列链表
-                    if (result.colHead[newNode->col] == nullptr) {
-                        result.colHead[newNode->col] = newNode;
-                    } else {
-                        addNodeAtColEnd(result.colHead[newNode->col], newNode);
-                    }
-                } else {
-                    delete(newNode);
-                }
-
-                curA = curA->right;
-                curB = curB->right;
-            } else if (curA->col < curB->col) {
-                OLNode* newNode = new OLNode();
-                newNode->row = curA->row;
-                newNode->col = curA->col;
-                newNode->value = curA->value;
-                // 插入行链表
-                if (result.rowHead[newNode->row] == nullptr) {
-                    result.rowHead[newNode->row] = newNode;
-                } else {
-                    addNodeAtRowEnd(result.rowHead[newNode->row], newNode);
-                }
-                // 插入列链表
-                if (result.colHead[newNode->col] == nullptr) {
-                    result.colHead[newNode->col] = newNode;
-                } else {
-                    addNodeAtColEnd(result.colHead[newNode->col], newNode);
-                }
-                curA = curA->right;
-            } else if (curA->col > curB->col) {
-                OLNode* newNode = new OLNode();
-                newNode->row = curB->row;
-                newNode->col = curB->col;
-                newNode->value = -1 * curB->value;
-                // 插入行链表
-                if (result.rowHead[newNode->row] == nullptr) {
-                    result.rowHead[newNode->row] = newNode;
-                } else {
-                    addNodeAtRowEnd(result.rowHead[newNode->row], newNode);
-                }
-                // 插入列链表
-                if (result.colHead[newNode->col] == nullptr) {
-                    result.colHead[newNode->col] = newNode;
-                } else {
-                    addNodeAtColEnd(result.colHead[newNode->col], newNode);
-                }
-                curB = curB->right;
-            }
+        tempResult[i] = new int[a.cols];
+        for (int j = 0; j < a.cols; j++) {
+            tempResult[i][j] = 0;
         }
-
-        // 如果还有剩余节点，再进行处理
-        if (curA != nullptr) {
-            while (curA != nullptr) {
-                OLNode* newNode = new OLNode();
-                newNode->row = curA->row;
-                newNode->col = curA->col;
-                newNode->value = curA->value;
-                // 插入行链表
-                if (result.rowHead[newNode->row] == nullptr) {
-                    result.rowHead[newNode->row] = newNode;
-                } else {
-                    addNodeAtRowEnd(result.rowHead[newNode->row], newNode);
-                }
-                // 插入列链表
-                if (result.colHead[newNode->col] == nullptr) {
-                    result.colHead[newNode->col] = newNode;
-                } else {
-                    addNodeAtColEnd(result.colHead[newNode->col], newNode);
-                }
-                curA = curA->right;
-            }
+    }
+    
+    // 遍历矩阵a，将非零元素加入结果
+    OLNode* rowNodeA = a.rowHead;
+    while (rowNodeA != nullptr) {
+        OLNode* colNode = rowNodeA;
+        while (colNode != nullptr) {
+            tempResult[colNode->row][colNode->col] += colNode->value;
+            colNode = colNode->right;
         }
-
-        if (curB != nullptr) {
-            while (curB != nullptr) {
-                OLNode* newNode = new OLNode();
-                newNode->row = curB->row;
-                newNode->col = curB->col;
-                newNode->value = -1 * curB->value;
-                // 插入行链表
-                if (result.rowHead[newNode->row] == nullptr) {
-                    result.rowHead[newNode->row] = newNode;
-                } else {
-                    addNodeAtRowEnd(result.rowHead[newNode->row], newNode);
-                }
-                // 插入列链表
-                if (result.colHead[newNode->col] == nullptr) {
-                    result.colHead[newNode->col] = newNode;
-                } else {
-                    addNodeAtColEnd(result.colHead[newNode->col], newNode);
-                }
-                curB = curB->right;
+        rowNodeA = rowNodeA->down;
+    }
+    
+    // 遍历矩阵b，将非零元素减去
+    OLNode* rowNodeB = b.rowHead;
+    while (rowNodeB != nullptr) {
+        OLNode* colNode = rowNodeB;
+        while (colNode != nullptr) {
+            tempResult[colNode->row][colNode->col] -= colNode->value;
+            colNode = colNode->right;
+        }
+        rowNodeB = rowNodeB->down;
+    }
+    
+    // 计算非零元素个数
+    int numNonZero = 0;
+    for (int i = 0; i < a.rows; i++) {
+        for (int j = 0; j < a.cols; j++) {
+            if (tempResult[i][j] != 0) {
+                numNonZero++;
             }
         }
     }
-
+    
+    // 使用assignMatrix函数构建结果稀疏矩阵
+    assignMatrix(result, tempResult, numNonZero);
+    
+    // 释放临时数组
+    for (int i = 0; i < a.rows; i++) {
+        delete[] tempResult[i];
+    }
+    delete[] tempResult;
+    
     return result;
 }
 
 void printMatrix(SparseMatrix matrix, int rows, int cols, bool withoutZeros) {
+    // 创建临时数组来存储矩阵
+    int** tempMatrix = new int*[rows];
     for (int i = 0; i < rows; i++) {
-        OLNode* current = matrix.rowHead[i];
-        int currentCol = 0;
+        tempMatrix[i] = new int[cols];
         for (int j = 0; j < cols; j++) {
-            if (current != nullptr && current->col == j) {
-                std::cout << '\t' << current->value << " ";
-                current = current->right;
+            tempMatrix[i][j] = 0;
+        }
+    }
+    
+    // 遍历稀疏矩阵，填充临时数组
+    OLNode* rowNode = matrix.rowHead;
+    while (rowNode != nullptr) {
+        OLNode* colNode = rowNode;
+        while (colNode != nullptr) {
+            tempMatrix[colNode->row][colNode->col] = colNode->value;
+            colNode = colNode->right;
+        }
+        rowNode = rowNode->down;
+    }
+    
+    // 打印矩阵
+    for (int i = 0; i < rows; i++) {
+        for (int j = 0; j < cols; j++) {
+            if (tempMatrix[i][j] != 0) {
+                std::cout << '\t' << tempMatrix[i][j] << " ";
             } else {
                 if (withoutZeros) {
                     std::cout << '\t' << " ";
@@ -337,6 +226,12 @@ void printMatrix(SparseMatrix matrix, int rows, int cols, bool withoutZeros) {
         }
         std::cout << std::endl;
     }
+    
+    // 释放临时数组
+    for (int i = 0; i < rows; i++) {
+        delete[] tempMatrix[i];
+    }
+    delete[] tempMatrix;
 }
 
 // int** operator+(const SparseMatrix &a, const SparseMatrix &b) {

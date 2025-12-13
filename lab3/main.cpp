@@ -2,21 +2,21 @@
 
 int main() {
     SparseMatrix matA, matB, matC;
-    initSparseMatrix(matA, 3, 5);
-    initSparseMatrix(matB, 3, 5);
+    initSparseMatrix(matA, 3, 2);
+    initSparseMatrix(matB, 3, 2);
     initSparseMatrix(matC, 5, 7);
 
     assignMatrix(matA, new int*[3] {
-        new int[5]{0, 0, 3, 0, 4},
-        new int[5]{0, 0, 5, 7, 0},
-        new int[5]{0, 0, 0, 0, 0}
-    }, 4);
+        new int[2]{10, 0},
+        new int[2]{0, 9},
+        new int[2]{-1, 0}
+    }, 3);
 
     assignMatrix(matB, new int*[3] {
-        new int[5]{0, 2, -3, 0, 0},
-        new int[5]{0, 0, 0, 3, 0},
-        new int[5]{0, 1, 4, 0, 5}
-    }, 6);
+        new int[2]{0, 0},
+        new int[2]{0, -1},
+        new int[2]{1, -3}
+    }, 3);
 
     assignMatrix(matC, new int*[5] {
         new int[7]{0, 0, 0, 0, 0, 0, 0},

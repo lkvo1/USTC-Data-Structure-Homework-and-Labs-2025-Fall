@@ -1,5 +1,5 @@
 {
-    "cmake.sourceDirectory": "F:/Huobin/Materials/USTC-Data-Structure-Homework-and-Labs-2025-Fall/hw9/q4/build",
+    "cmake.sourceDirectory": "D:/Huobin/Materials/USTC-Data-Structure-Homework-and-Labs-2025-Fall/lab5/build",
     "files.associations": {
         "iostream": "cpp",
         "array": "cpp",
@@ -46,6 +46,10 @@
         "streambuf": "cpp",
         "typeinfo": "cpp",
         "fstream": "cpp",
-        "sstream": "cpp"
+        "sstream": "cpp",
+        "codecvt": "cpp",
+        "ctime": "cpp",
+        "ratio": "cpp",
+        "iomanip": "cpp"
     }
 }

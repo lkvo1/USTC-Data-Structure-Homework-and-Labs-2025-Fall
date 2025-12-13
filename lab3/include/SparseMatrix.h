@@ -9,17 +9,17 @@ assignMatrix fill the matrix by inputing a two dimensional array to assign.
 + and - overload will return a two dimensional array as result.
 */
 
-
 #include <iostream>
 
 typedef struct OLNode {
     int row, col;
     int value;
     struct OLNode *right = nullptr, *down = nullptr;
+    OLNode(int r, int c): row(r), col(c) {}
 } OLNode;
 
 typedef struct SparseMatrix {
-    OLNode **rowHead, **colHead;
+    OLNode *rowHead, *colHead;
     int rows, cols;
     int numNonZero;
 } SparseMatrix;
